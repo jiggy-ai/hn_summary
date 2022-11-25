@@ -20,7 +20,8 @@ def send_message(text):
     """
     async def send():
         chat = await bot.get_chat(TELEGRAM_CHANNEL_ID)
-        await chat.send_message(text=text)
+        # only send first 4096 bytes to avoid overruning telegram max message size
+        await chat.send_message(text=text[:4096])
     loop = asyncio.get_event_loop()
     loop.run_until_complete(send())
 
