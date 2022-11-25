@@ -97,7 +97,7 @@ def url_to_text_content(url, max_tokens):
     raises exception if unable to adequately parse content
     returns the text and int percentage (0-100) of the text that was used to make the
     """
-    resp = requests.get(url)
+    resp = requests.get(url, timeout=30)
 
     if "html" not in resp.headers['Content-Type']:
         raise Exception(f"Unsupported content type: {resp.headers['Content-Type']}")
