@@ -2,14 +2,17 @@
 
 Join the HN Summary channel on Telegram to see the bot in action and enjoy the story summaries.
 
-t.me/hn_summary
+https://t.me/hn_summary
 
-**Limitations**
+## Limitations
 
 The code for extracting text from html is very basic and error prone. (PR's welcome.)  In addition many sites (such as news sites) are either paywalled or make it difficult to extract text. 
 
 Links to PDFs or content other than HTML is currently ignored.
 
+Text extraction from github links is currently broken.
+
+Telegram messages are limited to 4K. Currently the response is truncated to 4K.
 
 ## Major Dependencies
 
@@ -22,7 +25,7 @@ The following environment variables are used to inject database info and credent
 
 
 - HNSUM_POSTGRES_HOST  # The database FQDN
-- HNSUM_POSTGRES_USER  # The database username\
+- HNSUM_POSTGRES_USER  # The database username
 - HNSUM_POSTGRES_PASS  # The database password
 
 
