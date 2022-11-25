@@ -22,6 +22,7 @@ Text extraction from github and twitter links is broken.
 
 Telegram messages are limited to 4K. Currently the response is truncated to 4K.
 
+See [examples.md](https://github.com/jiggy-ai/hn_summary/blob/master/examples.md) for a few examples of the output.
 
 ## Major Dependencies
 
