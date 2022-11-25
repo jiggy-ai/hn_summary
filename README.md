@@ -1,4 +1,8 @@
-**HN Summary** is a simple bot which sumarizes top stories on Hacker News (https://news.ycombinator.com) using a large language model (currently OpenAI GPT-3 text-davinci-002) and sends the summaries to the hn_summary channel on Telegram.
+<p align="center">
+<img src="https://github.com/jiggy-ai/hn_summary/blob/master/HN_Summary.jpg" alt="HN Summary Bot avatar" width=256> 
+</p>
+
+**HN Summary** is an open source bot which sumarizes top stories on [Hacker News](https://news.ycombinator.com) (the linked url content itself, not the Hacker news discussion) using a large language model (currently OpenAI GPT-3 text-davinci-002) and sends the summaries to the hn_summary channel on Telegram.
 
 The purpose of this project is to build intuition on the capabilities of current generation large language models while making a broader swath of Hacker News content accessible.
 
@@ -14,10 +18,11 @@ The code for extracting text from html is very basic and error prone. (PR's welc
 
 Links to PDFs or content other than HTML is currently ignored.
 
-Text extraction from github links is currently broken.
+Text extraction from github and twitter links is broken.  
 
 Telegram messages are limited to 4K. Currently the response is truncated to 4K.
 
+See [examples.md](https://github.com/jiggy-ai/hn_summary/blob/master/examples.md) for a few examples of the output.
 
 ## Major Dependencies
 
