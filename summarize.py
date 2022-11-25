@@ -179,13 +179,13 @@ def process_news():
             telegram_bot.send_message(message)
 
             
-process_news()
-"""
+
 if __name__ == "__main__":
     while True:
         try:
             process_news()
         except Exception as e:
             print(e)
+        print("sleeping...")
         sleep(60)
-"""
+
