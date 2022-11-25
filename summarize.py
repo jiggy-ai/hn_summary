@@ -99,7 +99,7 @@ def url_to_text_content(url, max_tokens):
     """
     resp = requests.get(url)
 
-    if resp.headers['Content-Type'] not in ['text/html']:
+    if "html" not in resp.headers['Content-Type']:
         raise Exception(f"Unsupported content type: {resp.headers['Content-Type']}")
 
     if resp.status_code != 200:
@@ -141,7 +141,8 @@ def process_news():
 
             item = hnapi.get_item(story_id)
             story = HackerNewsStory(**item)
-                
+
+            print(story)    
             session.add(story)
             session.commit()
             
