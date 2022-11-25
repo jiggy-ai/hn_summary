@@ -4,7 +4,7 @@
 
 **HN Summary** is an open source bot which sumarizes top stories on [Hacker News](https://news.ycombinator.com) (the linked url content itself, not the Hacker news discussion) using a large language model (currently OpenAI GPT-3 text-davinci-002) and sends the summaries to the hn_summary channel on Telegram.
 
-The purpose of this project is to build intuition on the capabilities of current generation of large language models while making a broader swath of Hacker News content accessible.
+The purpose of this project is to build intuition on the capabilities of current generation of large language models while making a broader swath of top Hacker News content accessible.
 
 Join the HN Summary channel on Telegram to see the bot in action and enjoy the story summaries.
 
