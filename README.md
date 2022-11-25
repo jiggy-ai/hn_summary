@@ -2,7 +2,9 @@
 <img src="https://github.com/jiggy-ai/hn_summary/blob/master/HN_Summary.jpg" alt="HN Summary Bot avatar" width=256> 
 </p>
 
-**HN Summary** is an open source bot which sumarizes top stories on [Hacker News](https://news.ycombinator.com) (the linked url content itself, not the Hacker news discussion) using a large language model (currently OpenAI GPT-3 text-davinci-002) and sends the summaries to the hn_summary channel on Telegram.
+**HN Summary**  is an open source bot which sumarizes top stories on Hacker News and publishes the summaries to a Telegram channel.
+
+Whenever a new story appears on the Hacker News API /topstories.json endpoint, this bot summarizes it (currently using OpenAI GPT-3 text-davinci-002) and sends the Story title, summary, and url to the hn_summary channel on Telegram.
 
 The purpose of this project is to build intuition on the capabilities of current generation of large language models while making a broader swath of top Hacker News content accessible.
 
