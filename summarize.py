@@ -71,7 +71,7 @@ def compose_message(story, summary_text, percentage_used):
     message += f"https://news.ycombinator.com/item?id={story.id}\n"
     message += summary_text.lstrip()
     if percentage_used < 100:
-        message += "(Summary based on {percentage_used}% of story text.)\n"
+        message += f"\n(Summary based on {percentage_used}% of story text.)"
     return message
 
 
