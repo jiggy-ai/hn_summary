@@ -16,6 +16,10 @@ Telegram messages are limited to 4K. Currently the response is truncated to 4K.
 
 ## Major Dependencies
 
+**OpenAI**
+
+* OPENAI_API_KEY # your OpenAI API key
+
 
 **PostgresQL** 
 
@@ -28,7 +32,9 @@ The following environment variables are used to inject database info and credent
 - HNSUM_POSTGRES_USER  # The database username
 - HNSUM_POSTGRES_PASS  # The database password
 
-
 **Telegram**
   
 * HNSUM_TELEGRAM_API_TOKEN # The bot's telegram API token
+
+
+
