@@ -19,6 +19,7 @@ import urllib.parse
 
 from dbmodels import HackerNewsStory, StorySummary
 import hnapi
+from github_api import github_readme_text
 import telegram_bot
 
 
@@ -36,6 +37,10 @@ MAX_OUTPUT_TOKENS=880   # the maximum number of output tokens we will request
 
 # the PROMPT_PREFIX is prepended to the url content before sending to the language model
 PROMPT_PREFIX = "Provide a detailed summary of the following web page, including what type of content it is (e.g. news article, essay, technical report, blog post, product documentation, content marketing, etc). If there is anything controversial please highlight the controversy. If there is something surprising, unique, or clever, please highlight that as well:\n"
+
+# prompt prefix for Github Readme files
+GITHUB_PROMPT_PREFIX = "Provide a summary of the following github project readme file, including the purpose of the project, what problems it may be used to solve, and anything the author mentions that differentiates this project from others:"
+
 
 
 # Configure Logging
@@ -68,7 +73,10 @@ tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 def compose_prompt(story, story_text, truncated=False):
     # compose the prompt that will be fed to the language model
     site = urllib.parse.urlparse(story.url).netloc
-    prompt = PROMPT_PREFIX
+    if site == "github.com":
+        prompt = GITHUB_PROMPT_PREFIX
+    else:
+        prompt = PROMPT_PREFIX
     prompt += f"Title: {story.title}\n"
     prompt += f"Site: {site}\n"
     prompt += story_text
@@ -102,12 +110,10 @@ def extract_text_from_html(content):
     return output
 
 
-def url_to_text_content(url, max_tokens):
+def get_url_text(url):
     """
-    query the url and return the text content, subject to max_tokens
-    Uses GPT tokenizer to truncate the text to max_tokens
-    raises exception if unable to adequately parse content
-    returns the text and int percentage (0-100) of the text that was used to make the
+    get url content and extract readable text
+    returns the text
     """
     resp = requests.get(url, timeout=30)
 
@@ -115,14 +121,32 @@ def url_to_text_content(url, max_tokens):
         raise Exception(f"Unsupported content type: {resp.headers['Content-Type']}")
 
     if resp.status_code != 200:
-        raise Exception("Unable to get URL")
+        raise Exception("Unable to get URL ({resp.status_code})")
 
     doc = Document(resp.text)
     text = extract_text_from_html(doc.summary())
-    
+
     if not len(text) or text.isspace():
         raise Exception("Unable to extract text data from url")
-    
+    return text
+
+
+def url_to_truncated_text_content(url, max_tokens):
+    """
+    return the text content associated with url, 
+    truncating the content using GPT tokenizer to max_tokens length.
+    raises exception if unable to get or adequately parse content
+    returns the text and int percentage (0-100) of the text that was was used
+    (e.g. percent=80 means that 20% of the content was discarded due to exceeding 
+    max_tokens)
+    """
+    if urllib.parse.urlparse(url).netloc == 'github.com':
+        # for github repos use api to attempt to find a readme file
+        text = github_readme_text(url)
+    else:
+        text = get_url_text(url)
+
+    # measure the text size in tokens
     token_count = len(tokenizer(text)['input_ids'])
     
     if token_count > max_tokens:
@@ -157,7 +181,7 @@ def process_news():
                 continue
             # we have a url to process
             try:
-                story_text, percentage_used = url_to_text_content(story.url, MAX_INPUT_TOKENS)
+                story_text, percentage_used = url_to_truncated_text_content(story.url, MAX_INPUT_TOKENS)
             except Exception as e:
                 logger.exception(f"Error processing: {story}")
                 continue
@@ -179,7 +203,7 @@ def process_news():
             
             session.add(summary)
             session.commit()
-            logger.info(f"output length:  {len(summary_text)}")
+            logger.info(f"output length:  {len(summary_text)}")            
             telegram_bot.send_message(message)
 
             
