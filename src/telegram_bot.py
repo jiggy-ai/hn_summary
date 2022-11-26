@@ -5,6 +5,7 @@
 import os
 import telegram
 import asyncio
+from telegram.constants import ParseMode
 
 TELEGRAM_API_TOKEN = os.environ["HNSUM_TELEGRAM_API_TOKEN"]
 
@@ -21,7 +22,7 @@ def send_message(text):
     async def send():
         chat = await bot.get_chat(TELEGRAM_CHANNEL_ID)
         # only send first 4096 bytes to avoid overruning telegram max message size
-        await chat.send_message(text=text[:4096], parse_mode=telegram.ParseMode.MARKDOWN)
+        await chat.send_message(text=text[:4096], parse_mode=ParseMode.MARKDOWN)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(send())
 
