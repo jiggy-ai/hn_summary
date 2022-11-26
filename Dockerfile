@@ -1,8 +1,5 @@
 FROM bitnami/python:3.9-prod   
 
-# expose
-EXPOSE 8000
-
 # set working directory
 WORKDIR /app
 
