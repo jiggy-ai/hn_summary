@@ -67,7 +67,7 @@ def compose_prompt(title, story_text, truncated=False):
 
 def compose_message(story, summary_text, percentage_used):
     # compose the message that will be sent to the chat
-    message = '<b>' + story.title + '</b>' + "\n" 
+    message = '*bold* ' + story.title  + "\n" 
     message += f"https://news.ycombinator.com/item?id={story.id}\n"
     message += summary_text.lstrip()
     if percentage_used < 100:
