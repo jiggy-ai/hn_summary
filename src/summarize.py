@@ -14,6 +14,7 @@ import openai
 from readability import Document    # https://github.com/buriy/python-readability
 import string
 import requests
+import logging
 
 from dbmodels import HackerNewsStory, StorySummary
 import hnapi
@@ -35,6 +36,14 @@ MAX_OUTPUT_TOKENS=880   # the maximum number of output tokens we will request
 # the PROMPT_PREFIX is prepended to the url content before sending to the language model
 PROMPT_PREFIX = "Provide a detailed summary of the following web page, including what type of content it is (e.g. news article, essay, technical report, blog post, product documentation, content marketing, etc). If there is anything controversial please highlight the controversy. If there is something unique or clever, please highlight that as well:\n"
 
+
+# Configure Logging
+logger = logging.getLogger()
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s %(filename)s %(lineno)4d %(levelname)s %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
 
 # DB Config
@@ -120,12 +129,7 @@ def url_to_text_content(url, max_tokens):
         percent = int(100*split_point/len(text))
         text = text[:split_point]
     else:
-        percent = 100
-        
-    print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print(url)
-    print(text)
-    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        percent = 100        
     return text, percent
 
 
@@ -140,25 +144,21 @@ def process_news():
             # we haven't seen this story before, add it to the database and process it
 
             item = hnapi.get_item(story_id)
-            story = HackerNewsStory(**item)
-
-            print(story)    
+            story = HackerNewsStory(**item)            
+            logger.info(story)
             session.add(story)
             session.commit()
             
             if not story.url:
-                print(f"{story.title} has no url to summarize")
+                logger.info(f"{story.title} has no url to summarize")
                 continue
-            print(story.title)
-
             # we have a url to process
             try:
                 story_text, percentage_used = url_to_text_content(story.url, MAX_INPUT_TOKENS)
             except Exception as e:
-                print("Error processing: ", story.url)
-                print(e)
+                logger.exception(f"Error processing: {story}")
                 continue
-
+            logger.info(f"input length:   {len(story_text)}")
             prompt = compose_prompt(story.title, story_text, percentage_used < 100)
 
             completion = openai.Completion.create(engine=OPENAI_ENGINE,
@@ -176,16 +176,18 @@ def process_news():
             
             session.add(summary)
             session.commit()
+            logger.info(f"output length:  {len(summary_text)}")
             telegram_bot.send_message(message)
 
             
 
 if __name__ == "__main__":
+    logger.info("init")
     while True:
         try:
             process_news()
         except Exception as e:
-            print(e)
-        print("sleeping...")
+            logger.exception("process_news")
+        logger.info("sleeping...")
         sleep(60)
 
