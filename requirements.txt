@@ -2,7 +2,7 @@ pydantic==1.10.2
 sqlmodel==0.0.8
 psycopg2-binary==2.9.5
 requests==2.28.1
-python-telegram-bot==13.14
+python-telegram-bot==20.a2
 BeautifulSoup4==4.11.1
 openai==0.25.0
 readability-lxml==0.8.1
