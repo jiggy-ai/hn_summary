@@ -35,7 +35,7 @@ MAX_OUTPUT_TOKENS=880   # the maximum number of output tokens we will request
 
 
 # the PROMPT_PREFIX is prepended to the url content before sending to the language model
-PROMPT_PREFIX = "Provide a detailed summary of the following web page, including what type of content it is (e.g. news article, essay, technical report, blog post, product documentation, content marketing, etc). If there is anything controversial please highlight the controversy. If there is something unique or clever, please highlight that as well:\n"
+PROMPT_PREFIX = "Provide a detailed summary of the following web page, including what type of content it is (e.g. news article, essay, technical report, blog post, product documentation, content marketing, etc). If there is anything controversial please highlight the controversy. If there is something surprising, unique, or clever, please highlight that as well:\n"
 
 
 # Configure Logging
