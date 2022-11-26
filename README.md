@@ -28,6 +28,8 @@ Telegram messages are limited to 4K. Currently the response is truncated to 4K.
 
 ## Major Dependencies
 
+The following environment variables are used to inject credentials and other required configuration for the major dependencies:
+
 **OpenAI**
 
 * OPENAI_API_KEY # your OpenAI API key
@@ -37,7 +39,6 @@ Telegram messages are limited to 4K. Currently the response is truncated to 4K.
 
 Database for keeping track of items we have already seen and associated item info.
 
-The following environment variables are used to inject database info and credentials for the database:
 
 
 - HNSUM_POSTGRES_HOST  # The database FQDN
