@@ -34,7 +34,7 @@ https://news.ycombinator.com/item?id=33725795<br>
 This is a news article from CoinDesk summarizing a hearing in US Bankruptcy Court regarding the FTX cryptocurrency exchange. The article discusses how the exchange was run as a "personal fiefdom" by former CEO Sam Bankman-Fried and how many assets have disappeared. Bromley, a Sullivan & Cromwell partner representing FTX, told the court that "substantial amounts of money" were spent on items unrelated to the business, including vacation homes in the Bahamas. FTX now owes its top 50 creditors over $3.1 billion, according to a bankruptcy court filing.
 
 High fuel prices could kill more Europeans than fighting in Ukraine<br>
-https://news.ycombinator.com/item?id=33737040
+https://news.ycombinator.com/item?id=33737040<br>
 This is an article discussing how high fuel prices could kill more Europeans than fighting in Ukraine. The article is based on a statistical model that predicts that if past patterns hold, current electricity prices would drive deaths above the historical average even in the mildest winter. The article notes that exact mortality totals still depend on other factors, particularly temperature.
 (Summary based on 49% of story text.)
 
