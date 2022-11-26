@@ -15,6 +15,7 @@ from readability import Document    # https://github.com/buriy/python-readabilit
 import string
 import requests
 import logging
+import urllib.parse
 
 from dbmodels import HackerNewsStory, StorySummary
 import hnapi
@@ -64,10 +65,12 @@ SQLModel.metadata.create_all(engine)
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 
 
-def compose_prompt(title, story_text, truncated=False):
+def compose_prompt(story, story_text, truncated=False):
     # compose the prompt that will be fed to the language model
+    site = urllib.parse.urlparse(story.url).netloc
     prompt = PROMPT_PREFIX
-    prompt += f"Title: {title}\n"
+    prompt += f"Title: {story.title}\n"
+    prompt += f"Site: {site}\n"
     prompt += story_text
     if truncated:
         prompt += "<truncated>"
@@ -75,8 +78,8 @@ def compose_prompt(title, story_text, truncated=False):
 
 
 def compose_message(story, summary_text, percentage_used):
-    # compose the message that will be sent to the chat
-    message = "*" + story.title  + "*\n" 
+    # compose the message that will be sent to the channel
+    message =  f"*{story.title}*\n"
     message += f"https://news.ycombinator.com/item?id={story.id}\n"
     message += summary_text.lstrip()
     if percentage_used < 100:
@@ -159,7 +162,7 @@ def process_news():
                 logger.exception(f"Error processing: {story}")
                 continue
             logger.info(f"input length:   {len(story_text)}")
-            prompt = compose_prompt(story.title, story_text, percentage_used < 100)
+            prompt = compose_prompt(story, story_text, percentage_used < 100)
 
             completion = openai.Completion.create(engine=OPENAI_ENGINE,
                                                   prompt=prompt,
