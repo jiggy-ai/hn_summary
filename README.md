@@ -10,7 +10,7 @@ See [examples.md](https://github.com/jiggy-ai/hn_summary/blob/master/examples.md
 
 The purpose of this project is to help build intuition on the capabilities of the current generation of large language models while surfacing a broader swath of top Hacker News content.  It could also serve as a platform for experimentation with other language model capabilites such as semantic search.
 
-Join the HN Summary channel on Telegram to see the bot in action and enjoy the story summaries:
+Join the HN Summary channel on Telegram to see the bot in action and enjoy the story summaries: \
 https://t.me/hn_summary
 
 ## Limitations
