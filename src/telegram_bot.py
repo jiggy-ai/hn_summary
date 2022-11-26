@@ -17,7 +17,7 @@ bot = telegram.Bot(TELEGRAM_API_TOKEN)
 
 def send_message(text):
     """
-    send telegram text to our group channel syncronously
+    send telegram text to our group channel syncronously 
     """
     async def send():
         chat = await bot.get_chat(TELEGRAM_CHANNEL_ID)
