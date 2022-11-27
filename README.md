@@ -39,8 +39,6 @@ The following environment variables are used to inject credentials and other req
 
 Database for keeping track of items we have already seen and associated item info.
 
-
-
 - HNSUM_POSTGRES_HOST  # The database FQDN
 - HNSUM_POSTGRES_USER  # The database username
 - HNSUM_POSTGRES_PASS  # The database password
@@ -48,6 +46,6 @@ Database for keeping track of items we have already seen and associated item inf
 **Telegram**
   
 * HNSUM_TELEGRAM_API_TOKEN # The bot's telegram API token
-
+* HNSUM_TELGRAM_CHANNEL_ID # the telegram chat where the bot will post the summaries
 
 
