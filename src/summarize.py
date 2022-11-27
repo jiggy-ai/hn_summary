@@ -121,7 +121,7 @@ def get_url_text(url):
         raise Exception(f"Unsupported content type: {resp.headers['Content-Type']}")
 
     if resp.status_code != 200:
-        raise Exception("Unable to get URL ({resp.status_code})")
+        raise Exception(f"Unable to get URL ({resp.status_code})")
 
     doc = Document(resp.text)
     text = extract_text_from_html(doc.summary())
@@ -179,6 +179,11 @@ def process_news():
             if not story.url:
                 logger.info(f"{story.title} has no url to summarize")
                 continue
+
+            if urllib.parse.urlparse(url).netloc in ["youtube.com"]:
+                logger.info(f"skipping hopeless {url}")
+                continue
+            
             # we have a url to process
             try:
                 story_text, percentage_used = url_to_truncated_text_content(story.url, MAX_INPUT_TOKENS)
