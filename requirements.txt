@@ -6,6 +6,6 @@ python-telegram-bot==20.a2
 BeautifulSoup4==4.11.1
 openai==0.25.0
 readability-lxml==0.8.1
-transformers
-
+transformers==4.24.0
+markdown==3.4.1
 
