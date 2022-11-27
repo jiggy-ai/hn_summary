@@ -33,7 +33,7 @@ MODEL_TEMPERATURE=0.2
 
 
 MAX_INPUT_TOKENS=2800   # the maximum number of input tokens we will process 
-MAX_OUTPUT_TOKENS=880   # the maximum number of output tokens we will request
+MAX_OUTPUT_TOKENS=700   # the maximum number of output tokens we will request
 
 
 # the PROMPT_PREFIX is prepended to the url content before sending to the language model
