@@ -9,7 +9,7 @@ from telegram.constants import ParseMode
 
 TELEGRAM_API_TOKEN = os.environ["HNSUM_TELEGRAM_API_TOKEN"]
 
-TELEGRAM_CHANNEL_ID = os.environ.get("HNSUM_TELGRAM_CHANNEL_ID", -1001685064201)
+TELEGRAM_CHANNEL_ID = os.environ.get("HNSUM_TELEGRAM_CHANNEL_ID", -1001685064201)
 
 
 bot = telegram.Bot(TELEGRAM_API_TOKEN)

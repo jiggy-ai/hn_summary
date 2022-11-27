@@ -46,6 +46,6 @@ Database for keeping track of items we have already seen and associated item inf
 **Telegram**
   
 * HNSUM_TELEGRAM_API_TOKEN # The bot's telegram API token
-* HNSUM_TELGRAM_CHANNEL_ID # the telegram chat where the bot will post the summaries
+* HNSUM_TELEGRAM_CHANNEL_ID # the telegram chat where the bot will post the summaries
 
 
