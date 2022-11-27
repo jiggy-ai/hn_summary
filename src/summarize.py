@@ -89,9 +89,13 @@ def compose_message(story, summary_text, percentage_used):
     # compose the message that will be sent to the channel
     message =  f"*{story.title}*\n"
     message += f"https://news.ycombinator.com/item?id={story.id}\n"
-    message += summary_text.lstrip()
+    summary_text = summary_text.lstrip()
+    if summary_text:
+        message += summary_text
+    else:
+        message += "[Model failed to produce summary text]"
     if percentage_used < 100:
-        message += f"\n(Summary based on {percentage_used}% of story text.)"
+        message += f" (Summary based on {percentage_used}% of story text.)"
     return message
 
 
@@ -180,7 +184,7 @@ def process_news():
                 logger.info(f"{story.title} has no url to summarize")
                 continue
 
-            if urllib.parse.urlparse(url).netloc in ["youtube.com"]:
+            if urllib.parse.urlparse(story.url).netloc in ["youtube.com"]:
                 logger.info(f"skipping hopeless {url}")
                 continue
             
@@ -208,7 +212,7 @@ def process_news():
             
             session.add(summary)
             session.commit()
-            logger.info(f"output length:  {len(summary_text)}")            
+            logger.info(f"output length:  {len(summary_text)}")
             telegram_bot.send_message(message)
 
             
