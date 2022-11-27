@@ -164,7 +164,6 @@ def url_to_truncated_text_content(url, max_tokens):
     return text, percent
 
 
-
 def process_news():
     # get the top stories and process any new ones we haven't seen before
     with Session(engine) as session:    
@@ -184,7 +183,9 @@ def process_news():
                 logger.info(f"{story.title} has no url to summarize")
                 continue
 
-            if urllib.parse.urlparse(story.url).netloc in ["youtube.com"]:
+            HOPELESS = ["youtube.com",
+                        "www.youtube.com"]
+            if urllib.parse.urlparse(story.url).netloc in HOPELESS:
                 logger.info(f"skipping hopeless {url}")
                 continue
             
@@ -195,6 +196,7 @@ def process_news():
                 logger.exception(f"Error processing: {story}")
                 continue
             logger.info(f"input length:   {len(story_text)}")
+            
             prompt = compose_prompt(story, story_text, percentage_used < 100)
 
             completion = openai.Completion.create(engine=OPENAI_ENGINE,
