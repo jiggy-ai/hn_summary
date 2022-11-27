@@ -19,7 +19,7 @@ Large language models such as GPT-3 are prone to hallucinations and sometimes ma
 
 The code for extracting text from html is very basic and error prone. (PR's welcome.)  In addition many sites (such as news sites) are either paywalled or make it difficult to extract text. 
 
-Links to PDFs or content other than HTML is currently ignored.
+Links to content types other than PDF and HTML are currently ignored.
 
 Text extraction from reddit and twitter links are broken.  
 

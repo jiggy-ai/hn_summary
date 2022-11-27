@@ -8,4 +8,4 @@ openai==0.25.0
 readability-lxml==0.8.1
 transformers==4.24.0
 markdown==3.4.1
-
+pdfminer.six==20221105

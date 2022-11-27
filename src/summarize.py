@@ -21,6 +21,7 @@ from dbmodels import HackerNewsStory, StorySummary
 import hnapi
 from github_api import github_readme_text
 import telegram_bot
+from pdf_text import pdf_text
 
 
 # the model we use for summarization
@@ -49,7 +50,7 @@ handler = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s %(filename)s %(lineno)4d %(levelname)s %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 # DB Config
@@ -121,11 +122,16 @@ def get_url_text(url):
     """
     resp = requests.get(url, timeout=30)
 
-    if "html" not in resp.headers['Content-Type']:
-        raise Exception(f"Unsupported content type: {resp.headers['Content-Type']}")
-
     if resp.status_code != 200:
         raise Exception(f"Unable to get URL ({resp.status_code})")
+
+    CONTENT_TYPE = resp.headers['Content-Type']
+    
+    if 'pdf' in CONTENT_TYPE:
+        return pdf_text(resp.content)
+    
+    if "html" not in CONTENT_TYPE:
+        raise Exception(f"Unsupported content type: {resp.headers['Content-Type']}")
 
     doc = Document(resp.text)
     text = extract_text_from_html(doc.summary())
@@ -178,7 +184,7 @@ def process_news():
             logger.info(story)
             session.add(story)
             session.commit()
-            
+
             if not story.url:
                 logger.info(f"{story.title} has no url to summarize")
                 continue
@@ -204,17 +210,16 @@ def process_news():
                                                   temperature=MODEL_TEMPERATURE,
                                                   max_tokens=MAX_OUTPUT_TOKENS)
             summary_text = completion.choices[0].text
-
-            message = compose_message(story, summary_text, percentage_used)
+            logger.info(f"output length:  {len(summary_text)}")
 
             summary = StorySummary(story_id = story.id,
                                    model    = OPENAI_ENGINE,
                                    prompt   = prompt,
-                                   summary  = summary_text)
-            
+                                   summary  = summary_text)            
             session.add(summary)
             session.commit()
-            logger.info(f"output length:  {len(summary_text)}")
+            
+            message = compose_message(story, summary_text, percentage_used)            
             telegram_bot.send_message(message)
 
             
