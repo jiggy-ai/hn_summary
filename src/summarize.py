@@ -186,7 +186,7 @@ def process_news():
             HOPELESS = ["youtube.com",
                         "www.youtube.com"]
             if urllib.parse.urlparse(story.url).netloc in HOPELESS:
-                logger.info(f"skipping hopeless {url}")
+                logger.info(f"skipping hopeless {story.url}")
                 continue
             
             # we have a url to process
