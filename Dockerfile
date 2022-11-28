@@ -15,8 +15,6 @@ COPY ./requirements.txt /app/requirements.txt
 # install requirements
 RUN pip3 install -r requirements.txt
 
-CMD python summarize.py
-
 COPY src/*.py .
 
 # force download of the hugging face models into the container
