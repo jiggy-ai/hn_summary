@@ -10,18 +10,20 @@ See [examples.md](https://github.com/jiggy-ai/hn_summary/blob/master/examples.md
 
 The purpose of this project is to help build intuition on the capabilities of the current generation of large language models while surfacing a broader swath of top Hacker News content.  It could also serve as a platform for experimentation with other language model capabilites such as semantic search.
 
-Join the HN Summary channel on Telegram to see the bot in action and enjoy the story summaries: \
+Join the **HN Summary** channel on Telegram to see the bot in action and enjoy the story summaries: \
 https://t.me/hn_summary
+
+Flag bad summaries on the telegram channel with 👎 to help mitigate and improve.
 
 ## Limitations
 
-Large language models such as GPT-3 are prone to hallucinations and sometimes make things up while writing in a very authoritative tone.
+Large language models such as GPT-3 are prone to crazy hallucinations and sometimes make things up while writing in a very authoritative tone.
 
-The code for extracting text from html is very basic and error prone. (PR's welcome.)  In addition many sites (such as news sites) are either paywalled or make it difficult to extract text. 
+The code for extracting text from html is very basic and error prone. (PR's welcome.)  In addition many sites (such as news sites) are either paywalled or make it difficult to extract text. We now attempt to catch this case via prompt engineering but when one does slip through we tend to get fanciful hallucinations based on just the title and FQDN.
 
 Links to content types other than PDF and HTML are currently ignored.
 
-Text extraction from reddit and twitter links are broken.  
+Text extraction from reddit and twitter and other commercial links are broken and probably produce wildly hallucinated summaries. 
 
 Telegram messages are limited to 4K. Currently the response is truncated to 4K.
 
