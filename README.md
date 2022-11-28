@@ -23,7 +23,7 @@ The code for extracting text from html is very basic and error prone. (PR's welc
 
 Links to content types other than PDF and HTML are currently ignored.
 
-Text extraction from reddit and twitter links are broken and probably produce wildly hallucinated summaries. 
+Text extraction from reddit and twitter and other commercial links are broken and probably produce wildly hallucinated summaries. 
 
 Telegram messages are limited to 4K. Currently the response is truncated to 4K.
 
