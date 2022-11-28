@@ -25,7 +25,7 @@ from pdf_text import pdf_text
 
 
 # the model we use for summarization
-OPENAI_ENGINE="text-davinci-002"
+OPENAI_ENGINE="text-davinci-003"
 
 # The temperature passed to the language model; higher values closer to 1 allow the model to choose
 # less probable words.  a value of 0 is results in deterministic but potentially less creative results.
