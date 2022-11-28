@@ -17,7 +17,7 @@ https://t.me/hn_summary
 
 Large language models such as GPT-3 are prone to hallucinations and sometimes make things up while writing in a very authoritative tone.
 
-The code for extracting text from html is very basic and error prone. (PR's welcome.)  In addition many sites (such as news sites) are either paywalled or make it difficult to extract text. 
+The code for extracting text from html is very basic and error prone. (PR's welcome.)  In addition many sites (such as news sites) are either paywalled or make it difficult to extract text. We now attempt to catch this case via prompt engineering but when one does slip through we tend to get fanciful hallucinations based on just the title and FQDN.
 
 Links to content types other than PDF and HTML are currently ignored.
 
