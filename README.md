@@ -13,6 +13,8 @@ The purpose of this project is to help build intuition on the capabilities of th
 Join the HN Summary channel on Telegram to see the bot in action and enjoy the story summaries: \
 https://t.me/hn_summary
 
+Flag bad summaries on the telegram channel with 👎 to help mitigate and improve.
+
 ## Limitations
 
 Large language models such as GPT-3 are prone to crazy hallucinations and sometimes make things up while writing in a very authoritative tone.
