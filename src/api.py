@@ -74,19 +74,24 @@ def cached_top_stories():
     return top_stories
     
 
+
 @app.get('/', response_class=HTMLResponse)
 def get_root():
     result = "<html>"
     count = 0
     t0 = time()
-
     
     with Session(engine) as session:
-        top30_ids = top_stories[:30]
+        top30_ids = cached_top_stories()[:30]
         stories = session.exec(select(HackerNewsStory).where(HackerNewsStory.id.in_(top30_ids))).all()
+        stories = {s.id : s for s in stories}
         summaries = session.exec(select(StorySummary).where(StorySummary.story_id.in_(top30_ids))).all()
         summaries = {s.story_id: s for s in summaries}
-        for story in stories:
+        for sid in top30_ids:
+            try:
+                story = stories[sid]
+            except:
+                continue
             #result += f"<a href={story.url}>{story.title}</a><br>"
             result += f"<b>{story.title}</b><br>"
             result += f"<a href={story.url}>{story.url}</a><br>"
