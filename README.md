@@ -10,7 +10,7 @@ https://t.me/hn_summary
 Flag bad summaries on the telegram channel with 👎 to help mitigate and improve.
 
 You can also see summaries of the current top Hacker news articles: \
-[https:://news.jiggy.ai](https:://news.jiggy.ai)
+[https://news.jiggy.ai](https://news.jiggy.ai)
 
 ## Operation
 
@@ -20,10 +20,6 @@ See [examples.md](https://github.com/jiggy-ai/hn_summary/blob/master/examples.md
 
 The purpose of this project is to help build intuition on the capabilities of the current generation of large language models while surfacing a broader swath of top Hacker News content.  It could also serve as a platform for experimentation with other language model capabilites such as semantic search.
 
-Join the **HN Summary** channel on Telegram to see the bot in action and enjoy the story summaries: \
-https://t.me/hn_summary
-
-Flag bad summaries on the telegram channel with 👎 to help mitigate and improve.
 
 ## Limitations
 
