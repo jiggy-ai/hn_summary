@@ -170,10 +170,13 @@ def url_to_truncated_text_content(url, max_tokens):
     return text, percent
 
 
+TOP_N_STORIES = 400   # only consider the top TOP_N_STORIES
+logger.info(f"TOP_N_STORIES: {TOP_N_STORIES}")
+
 def process_news():
     # get the top stories and process any new ones we haven't seen before
     with Session(engine) as session:    
-        for story_id in hnapi.get_topstories():
+        for story_id in hnapi.get_topstories()[:TOP_N_STORIES]:
             story = session.get(HackerNewsStory, story_id)
             if story:
                 continue
