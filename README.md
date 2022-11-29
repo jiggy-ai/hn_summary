@@ -9,14 +9,12 @@ https://t.me/hn_summary
 
 Flag bad summaries on the telegram channel with 👎 to help mitigate and improve.
 
-You can also see summaries of the current top Hacker News articles: \
+You can find summaries of the current top Hacker News articles here as well: \
 [https://news.jiggy.ai](https://news.jiggy.ai)
 
-## Operation
+## Overview
 
 Whenever a new story appears on the Hacker News API /topstories.json endpoint, this bot summarizes it (currently using OpenAI GPT-3 text-davinci-003) and sends the Story title, summary, and url to the hn_summary channel on Telegram.
-
-See [examples.md](https://github.com/jiggy-ai/hn_summary/blob/master/examples.md) for a few examples of the output.
 
 The purpose of this project is to help build intuition on the capabilities of the current generation of large language models while surfacing a broader swath of top Hacker News content.  It could also serve as a platform for experimentation with other language model capabilites such as semantic search.
 
