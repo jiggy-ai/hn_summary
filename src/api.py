@@ -60,7 +60,7 @@ def on_startup():
     SQLModel.metadata.create_all(engine)
 
 import textwrap
-wrapper = textwrap.TextWrapper(width=100)
+wrapper = textwrap.TextWrapper(width=80)
 
 import threading
 
@@ -68,7 +68,9 @@ HTML_RESPONSE = ""
 
 def update_html():
     logger.info("update")
-    result = "<html>Join <a href=https://t.me/hn_summary>HN Summary</a> on Telegram to view realtime summaries of top HN Stories<br><br>"
+    result = "<html>Join <a href=https://t.me/hn_summary>HN Summary</a> channel on Telegram to view realtime summaries of top HN Stories<br>"
+    result += "Results are from open source <a href=https://github.com/jiggy-ai/hn_summary>HN Summary</a> bot.<BR><br>"
+    
     count = 0
     t0 = time()
     
@@ -86,6 +88,7 @@ def update_html():
             result += f"<a href={story.url}>{story.url}</a><br>"
             ycurl   = f"https://news.ycombinator.com/item?id={story.id}"            
             result += f"<a href={ycurl}>{ycurl}</a><br>"
+            result += f"<a href=/prompt/{sid}>model prompt</a><br>"
             summaries.sort(key=lambda x: x.model)
             for summary in summaries:
                 if not summary: continue
@@ -115,3 +118,12 @@ threading.Thread(target=background).start()
 @app.get('/', response_class=HTMLResponse)
 def get_root():
     return HTML_RESPONSE
+
+
+@app.get('/prompt/{story_id}', response_class=HTMLResponse)
+def get_prompt(story_id: str = Path(...)):
+    with Session(engine) as session:
+        summary = session.exec(select(StorySummary).where(StorySummary.story_id == story_id)).first()
+        if not summary:
+            return "None"
+        return summary.prompt

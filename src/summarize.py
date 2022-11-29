@@ -25,7 +25,7 @@ from pdf_text import pdf_text
 
 
 # the model we use for summarization
-OPENAI_ENGINE="text-davinci-003"
+MODELS = ["text-davinci-003", "text-davinci-002"]
 
 # The temperature passed to the language model; higher values closer to 1 allow the model to choose
 # less probable words.  a value of 0 is results in deterministic but potentially less creative results.
@@ -205,22 +205,24 @@ def process_news():
             
             prompt = compose_prompt(story, story_text, percentage_used < 100)
 
-            completion = openai.Completion.create(engine=OPENAI_ENGINE,
-                                                  prompt=prompt,
-                                                  temperature=MODEL_TEMPERATURE,
-                                                  max_tokens=MAX_OUTPUT_TOKENS)
-            summary_text = completion.choices[0].text
-            logger.info(f"output length:  {len(summary_text)}")
+            for model in MODELS:
+                completion = openai.Completion.create(engine=model,
+                                                      prompt=prompt,
+                                                      temperature=MODEL_TEMPERATURE,
+                                                      max_tokens=MAX_OUTPUT_TOKENS)
+                summary_text = completion.choices[0].text
+                logger.info(f"output length:  {len(summary_text)}")
 
-            summary = StorySummary(story_id = story.id,
-                                   model    = OPENAI_ENGINE,
-                                   prompt   = prompt,
-                                   summary  = summary_text)            
-            session.add(summary)
-            session.commit()
-            
-            message = compose_message(story, summary_text, percentage_used)            
-            telegram_bot.send_message(message)
+                summary = StorySummary(story_id = story.id,
+                                       model    = model,
+                                       prompt   = prompt,
+                                       summary  = summary_text)            
+                session.add(summary)
+                session.commit()
+
+                if model == "text-davinci-003":  # only send message for 003 model
+                    message = compose_message(story, summary_text, percentage_used)            
+                    telegram_bot.send_message(message)
 
             
 
