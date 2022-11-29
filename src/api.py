@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import List, Optional
 from pydantic import conint
-
+from time import sleep
 from fastapi import FastAPI, Path, Query, HTTPException, UploadFile, File, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPBearer 
@@ -54,53 +54,58 @@ app = FastAPI(
     servers=[{'url': 'https://news.jiggy.ai/'}],
 )
 
-
     
 @app.on_event("startup")
 def on_startup():
     SQLModel.metadata.create_all(engine)
 
-
-top_stories = hnapi.get_topstories()
-last_top_stories = time()
-
-
-def cached_top_stories():
-    global top_stories
-    global last_top_stories
-    if (time() - last_top_stories) > 60:
-        top_stories = hnapi.get_topstories()
-        last_top_stories = time()
-    return top_stories
     
+import threading
 
+HTML_RESPONSE = ""
 
-@app.get('/', response_class=HTMLResponse)
-def get_root():
-    result = "<html>"
+def update_html():
+    logger.info("update")
+    result = "<html>Join <a href=https://t.me/hn_summary>HN Summary</a> on Telegram to view summaries of top HN Stories<br><br>"
     count = 0
     t0 = time()
     
     with Session(engine) as session:
-        top30_ids = cached_top_stories()[:30]
+        top30_ids = hnapi.get_topstories()[:30]
         stories = session.exec(select(HackerNewsStory).where(HackerNewsStory.id.in_(top30_ids))).all()
         stories = {s.id : s for s in stories}
-        summaries = session.exec(select(StorySummary).where(StorySummary.story_id.in_(top30_ids))).all()
-        summaries = {s.story_id: s for s in summaries}
         for sid in top30_ids:
             try:
                 story = stories[sid]
             except:
                 continue
-            #result += f"<a href={story.url}>{story.title}</a><br>"
+            summaries = session.exec(select(StorySummary).where(StorySummary.story_id == story.id)).all()
             result += f"<b>{story.title}</b><br>"
             result += f"<a href={story.url}>{story.url}</a><br>"
             ycurl   = f"https://news.ycombinator.com/item?id={story.id}"            
-            result += f"<a href={ycurl}>{ycurl}</a><br>"
-            try:
-                result += summaries[story.id].summary + "<br><br>"
-            except:
-                result += "(no summary)<br><br>"
+            result += f"<a href={ycurl}>{ycurl}</a><br>"            
+            for summary in summaries:
+                if not summary: continue
+                result += f"{summary.model}:<br>"
+                result += summary.summary + "<br>"
+            result += "<br><br>"
     result += "</html>"
-    logger.info(f"{time()-t0} s")
-    return result
+    global HTML_RESPONSE
+    HTML_RESPONSE = result
+    logger.info(f"update {time()-t0} seconds")
+    
+    
+def background():
+    while True:
+        try:
+            update_html()
+        except exception as e:
+            logger.exception(e)
+        sleep(120)
+
+threading.Thread(target=background).start()
+
+
+@app.get('/', response_class=HTMLResponse)
+def get_root():
+    return HTML_RESPONSE
