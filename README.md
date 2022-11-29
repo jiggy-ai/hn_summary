@@ -10,7 +10,7 @@ https://t.me/hn_summary
 Flag bad summaries on the telegram channel with 👎 to help mitigate and improve.
 
 You can also see summaries of the current top Hacker news articles: \
-https:://news.jiggy.ai
+[https:://news.jiggy.ai](https:://news.jiggy.ai)
 
 ## Operation
 
