@@ -4,6 +4,16 @@
 
 **HN Summary**  is an open source bot which sumarizes top stories on Hacker News and publishes the summaries to a Telegram channel.
 
+Join the **HN Summary** channel on Telegram to see the bot in action and enjoy the story summaries: \
+https://t.me/hn_summary
+
+Flag bad summaries on the telegram channel with 👎 to help mitigate and improve.
+
+You can also see summaries of the current top Hacker news articles: \
+https:://news.jiggy.ai
+
+## Operation
+
 Whenever a new story appears on the Hacker News API /topstories.json endpoint, this bot summarizes it (currently using OpenAI GPT-3 text-davinci-003) and sends the Story title, summary, and url to the hn_summary channel on Telegram.
 
 See [examples.md](https://github.com/jiggy-ai/hn_summary/blob/master/examples.md) for a few examples of the output.
