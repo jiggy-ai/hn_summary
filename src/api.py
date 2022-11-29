@@ -59,19 +59,21 @@ app = FastAPI(
 def on_startup():
     SQLModel.metadata.create_all(engine)
 
-    
+import textwrap
+wrapper = textwrap.TextWrapper(width=100)
+
 import threading
 
 HTML_RESPONSE = ""
 
 def update_html():
     logger.info("update")
-    result = "<html>Join <a href=https://t.me/hn_summary>HN Summary</a> on Telegram to view summaries of top HN Stories<br><br>"
+    result = "<html>Join <a href=https://t.me/hn_summary>HN Summary</a> on Telegram to view realtime summaries of top HN Stories<br><br>"
     count = 0
     t0 = time()
     
     with Session(engine) as session:
-        top30_ids = hnapi.get_topstories()[:30]
+        top30_ids = hnapi.get_topstories()[:100]
         stories = session.exec(select(HackerNewsStory).where(HackerNewsStory.id.in_(top30_ids))).all()
         stories = {s.id : s for s in stories}
         for sid in top30_ids:
@@ -83,12 +85,16 @@ def update_html():
             result += f"<b>{story.title}</b><br>"
             result += f"<a href={story.url}>{story.url}</a><br>"
             ycurl   = f"https://news.ycombinator.com/item?id={story.id}"            
-            result += f"<a href={ycurl}>{ycurl}</a><br>"            
+            result += f"<a href={ycurl}>{ycurl}</a><br>"
+            summaries.sort(key=lambda x: x.model)
             for summary in summaries:
                 if not summary: continue
                 result += f"{summary.model}:<br>"
-                result += summary.summary + "<br>"
-            result += "<br><br>"
+                word_list = wrapper.wrap(text=summary.summary)
+                for element in word_list:
+                    result += element + "<br>"
+                result += "<br>"
+            result += "<br>"                
     result += "</html>"
     global HTML_RESPONSE
     HTML_RESPONSE = result
