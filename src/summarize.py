@@ -4,7 +4,7 @@
 ##
 
 import os
-from sqlmodel import Session, create_engine, SQLModel, select
+from sqlmodel import Session, select
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.exc import MultipleResultsFound
 from time import sleep
@@ -22,7 +22,8 @@ import hnapi
 from github_api import github_readme_text
 import telegram_bot
 from pdf_text import pdf_text
-
+from db import engine
+import dup_filter
 
 # the model we use for summarization
 MODELS = ["text-davinci-003", "text-davinci-002"]
@@ -53,17 +54,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-# DB Config
-db_host = os.environ['HNSUM_POSTGRES_HOST']
-user    = os.environ['HNSUM_POSTGRES_USER']
-passwd  = os.environ['HNSUM_POSTGRES_PASS']
 
-DBURI = 'postgresql+psycopg2://%s:%s@%s:5432/hnsum' % (user, passwd, db_host)
-
-engine = create_engine(DBURI, pool_pre_ping=True, echo=False)
-
-# Create DB Engine
-SQLModel.metadata.create_all(engine)
 
 
 # the tokenizer for helping to enforce the MAX_INPUT_TOKENS constraint
@@ -185,6 +176,10 @@ def process_news():
             session.add(story)
             session.commit()
 
+            if dup_filter.is_duplicate(story):
+                logger.info(f"{story.id} is_duplicate")
+                continue
+                
             if not story.url:
                 logger.info(f"{story.title} has no url to summarize")
                 continue
