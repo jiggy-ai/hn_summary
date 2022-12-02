@@ -158,7 +158,7 @@ def url_to_truncated_text_content(url, max_tokens):
     return text, percent
 
 
-TOP_N_STORIES = 400   # only consider the top TOP_N_STORIES
+TOP_N_STORIES = 120   # only consider the top TOP_N_STORIES
 logger.info(f"TOP_N_STORIES: {TOP_N_STORIES}")
 
 def process_news():
