@@ -44,7 +44,6 @@ PROMPT_PREFIX = "Provide a detailed summary of the following web content, includ
 GITHUB_PROMPT_PREFIX = "Provide a summary of the following github project readme file, including the purpose of the project, what problems it may be used to solve, and anything the author mentions that differentiates this project from others:"
 
 
-
 # Configure Logging
 logger = logging.getLogger()
 handler = logging.StreamHandler()
@@ -52,8 +51,6 @@ formatter = logging.Formatter('%(asctime)s %(filename)s %(lineno)4d %(levelname)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
-
-
 
 
 
@@ -158,68 +155,104 @@ def url_to_truncated_text_content(url, max_tokens):
     return text, percent
 
 
-TOP_N_STORIES = 400   # only consider the top TOP_N_STORIES
+
+TOP_N_STORIES = 400   # only send messages for the top TOP_N_STORIES
 logger.info(f"TOP_N_STORIES: {TOP_N_STORIES}")
 
-def process_news():
-    # get the top stories and process any new ones we haven't seen before
-    with Session(engine) as session:    
-        for story_id in hnapi.get_topstories()[:TOP_N_STORIES]:
-            story = session.get(HackerNewsStory, story_id)
-            if story:
-                continue
-            # we haven't seen this story before, add it to the database and process it
-
+current_top_stories = None
+def update_top_stories():
+    """
+    update our story database to include new items in all of the hn api top stories
+    this tries to guarantee that the currrent_top_stories is up to date and
+    each story item has an entry in HackerNewsStory table
+    """
+    global current_top_stories
+    current_top_stories = hnapi.get_topstories()
+    
+    with Session(engine) as session:
+        for story_id in current_top_stories:
+            if session.get(HackerNewsStory, story_id):
+                continue  # already have it in the db
             item = hnapi.get_item(story_id)
             story = HackerNewsStory(**item)            
-            logger.info(story)
+            logger.info(f"Found new story: {story}")
             session.add(story)
             session.commit()
 
-            if dup_filter.is_duplicate(story):
-                logger.info(f"{story.id} is_duplicate")
-                continue
+def crawl_top_stories():
+    """
+    """
+    
+
+def process_new_story(story_id, rank):
+    with Session(engine) as session:    
+        item = hnapi.get_item(story_id)
+        story = HackerNewsStory(**item)            
+        logger.info(story)
+        session.add(story)
+        session.commit()
+
+        if rank < TOP_N_STORIES:
+            logger.info(f"{story.id} rankis_duplicate")            
+            continue
+        
+        if dup_filter.is_duplicate(story):
+            logger.info(f"{story.id} is_duplicate")
+            return
                 
-            if not story.url:
-                logger.info(f"{story.title} has no url to summarize")
-                continue
+        if not story.url:
+            logger.info(f"{story.title} has no url to summarize")
+            return
 
-            HOPELESS = ["youtube.com",
-                        "www.youtube.com"]
-            if urllib.parse.urlparse(story.url).netloc in HOPELESS:
-                logger.info(f"skipping hopeless {story.url}")
-                continue
+        HOPELESS = ["youtube.com",
+                    "www.youtube.com"]
+        if urllib.parse.urlparse(story.url).netloc in HOPELESS:
+            logger.info(f"skipping hopeless {story.url}")
+            return
+
+        # we have a url to process
+        try:
+            story_text, percentage_used = url_to_truncated_text_content(story.url, MAX_INPUT_TOKENS)
+        except Exception as e:
+            logger.exception(f"Error processing: {story}")
+            return
+        logger.info(f"input length:   {len(story_text)}")
+
+        prompt = compose_prompt(story, story_text, percentage_used < 100)
+
+        for model in MODELS:
+            completion = openai.Completion.create(engine=model,
+                                                  prompt=prompt,
+                                                  temperature=MODEL_TEMPERATURE,
+                                                  max_tokens=MAX_OUTPUT_TOKENS)
+            summary_text = completion.choices[0].text
+            logger.info(f"output length:  {len(summary_text)}")
+
+            summary = StorySummary(story_id = story.id,
+                                   model    = model,
+                                   prompt   = prompt,
+                                   summary  = summary_text)            
+            session.add(summary)
+            session.commit()
+
+            if model == "text-davinci-003":  # only send message for 003 model
+                message = compose_message(story, summary_text, percentage_used)            
+                telegram_bot.send_message(message)
+
             
-            # we have a url to process
-            try:
-                story_text, percentage_used = url_to_truncated_text_content(story.url, MAX_INPUT_TOKENS)
-            except Exception as e:
-                logger.exception(f"Error processing: {story}")
-                continue
-            logger.info(f"input length:   {len(story_text)}")
-            
-            prompt = compose_prompt(story, story_text, percentage_used < 100)
+def new_top_story_ids():
+    """
+    return (story_id, rank) for any new top stories
+    """
+    new_stories = []
+    return new_stories
 
-            for model in MODELS:
-                completion = openai.Completion.create(engine=model,
-                                                      prompt=prompt,
-                                                      temperature=MODEL_TEMPERATURE,
-                                                      max_tokens=MAX_OUTPUT_TOKENS)
-                summary_text = completion.choices[0].text
-                logger.info(f"output length:  {len(summary_text)}")
+                            
+def process_news():
+    # get the top stories and process any new ones we haven't seen before
+    for story_id, rank in new_top_story_ids():
+        process_new_story(story_id, rank)
 
-                summary = StorySummary(story_id = story.id,
-                                       model    = model,
-                                       prompt   = prompt,
-                                       summary  = summary_text)            
-                session.add(summary)
-                session.commit()
-
-                if model == "text-davinci-003":  # only send message for 003 model
-                    message = compose_message(story, summary_text, percentage_used)            
-                    telegram_bot.send_message(message)
-
-            
 
 if __name__ == "__main__":
     logger.info("init")
