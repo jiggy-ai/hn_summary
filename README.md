@@ -12,6 +12,8 @@ Flag bad summaries on the telegram channel with 👎 to help mitigate and improv
 You can find summaries of the current top Hacker News articles here as well: \
 [https://news.jiggy.ai](https://news.jiggy.ai)
 
+Feel free to open PR/issue or dm me at @wskish on telegram or twitter with feedback.
+
 ## Overview
 
 Whenever a new story appears on the Hacker News API /topstories.json endpoint, this bot summarizes it (currently using OpenAI GPT-3 text-davinci-003) and sends the Story title, summary, and url to the hn_summary channel on Telegram.
