@@ -26,7 +26,8 @@ from db import engine
 import dup_filter
 
 # the model we use for summarization
-MODELS = ["text-davinci-003", "text-davinci-002"]
+#MODELS = ["text-davinci-003", "text-davinci-002"]
+MODELS = ["text-davinci-003"]
 
 # The temperature passed to the language model; higher values closer to 1 allow the model to choose
 # less probable words.  a value of 0 is results in deterministic but potentially less creative results.
