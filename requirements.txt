@@ -12,4 +12,4 @@ pdfminer.six==20221105
 fastapi
 uvicorn[standard]
 gunicorn
-
+langchain==0.0.77

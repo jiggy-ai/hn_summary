@@ -3,6 +3,12 @@
 ## send the summaries to a telegram Channel
 ##
 
+from langchain.docstore.document import Document as langchaindoc
+from langchain.text_splitter import CharacterTextSplitter, TokenTextSplitter
+from langchain.llms import OpenAI
+from langchain import PromptTemplate
+from langchain.chains.summarize import load_summarize_chain
+
 import os
 from sqlmodel import Session, select
 from sqlalchemy.orm.exc import NoResultFound
@@ -37,14 +43,41 @@ MODEL_TEMPERATURE=0.2
 MAX_INPUT_TOKENS=2800   # the maximum number of input tokens we will process 
 MAX_OUTPUT_TOKENS=700   # the maximum number of output tokens we will request
 
-
-# the PROMPT_PREFIX is prepended to the url content before sending to the language model
-PROMPT_PREFIX = "Provide a detailed summary of the following web content, including what type of content it is (e.g. news article, essay, technical report, blog post, product documentation, content marketing, etc). If the content looks like an error message, respond 'content unavailable'. If there is anything controversial please highlight the controversy. If there is something surprising, unique, or clever, please highlight that as well:\n"
-
-# prompt prefix for Github Readme files
-GITHUB_PROMPT_PREFIX = "Provide a summary of the following github project readme file, including the purpose of the project, what problems it may be used to solve, and anything the author mentions that differentiates this project from others:"
+llm = OpenAI(model=MODELS[0], temperature=MODEL_TEMPERATURE, max_tokens=MAX_OUTPUT_TOKENS)
 
 
+# the prompt template for web content
+web_prompt_template = """
+Provide a detailed summary of the following web content, including what type of content it is 
+(e.g. news article, essay, technical report, blog post, product documentation, content marketing, etc). 
+If the content looks like an error message, respond 'content unavailable'. 
+If there is anything controversial please highlight the controversy. 
+If there is something surprising, unique, or clever, please highlight that as well:
+{text}
+"""
+print(web_prompt_template)
+web_prompt = PromptTemplate(template=web_prompt_template, 
+                            input_variables=["text"])
+ 
+web_chain = load_summarize_chain(llm, 
+                                 chain_type="map_reduce", 
+                                 map_prompt=web_prompt,
+                                 combine_prompt=web_prompt,
+                                 return_intermediate_steps=False) # set to True for debugging
+# prompt template for Github Readme files
+github_prompt_template = """
+Provide a summary of the following github project readme file, including the purpose of the project, 
+what problems it may be used to solve, and anything the author mentions that differentiates this project from others:"
+{text}
+"""
+print(github_prompt_template)
+github_prompt = PromptTemplate(template=github_prompt_template, 
+                                input_variables=["text"])
+github_chain = load_summarize_chain(llm, 
+                                 chain_type="map_reduce", 
+                                 map_prompt=github_prompt,
+                                 combine_prompt=github_prompt,
+                                 return_intermediate_steps=False) # set to True for debugging
 
 # Configure Logging
 logger = logging.getLogger()
@@ -55,28 +88,9 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-
-
-
 # the tokenizer for helping to enforce the MAX_INPUT_TOKENS constraint
 # GPT3 apparently uses the same tokenizer as gpt2
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-
-
-def compose_prompt(story, story_text, truncated=False):
-    # compose the prompt that will be fed to the language model
-    site = urllib.parse.urlparse(story.url).netloc
-    if site == "github.com":
-        prompt = GITHUB_PROMPT_PREFIX
-    else:
-        prompt = PROMPT_PREFIX
-    prompt += f"Title: {story.title}\n"
-    prompt += f"Site: {site}\n"
-    prompt += story_text
-    if truncated:
-        prompt += "<truncated>"
-    return prompt
-
 
 def compose_message(story, summary_text, percentage_used):
     # compose the message that will be sent to the channel
@@ -162,6 +176,43 @@ def url_to_truncated_text_content(url, max_tokens):
 TOP_N_STORIES = 120   # only consider the top TOP_N_STORIES
 logger.info(f"TOP_N_STORIES: {TOP_N_STORIES}")
 
+# doesn't respect sentence boundaries
+def token_chunker(text, chunk_size):
+    text_splitter = TokenTextSplitter(chunk_size=chunk_size, chunk_overlap=0)
+    texts = text_splitter.split_text(text)
+    return texts
+
+def summerize_web_url(url):
+    try:
+        text = get_url_text(url)
+    except Exception as e:
+        logger.exception(f"Error processing: {url}")
+        raise
+    logger.info(f"input length:   {len(text)}") 
+    chunk_size = 4097 - MAX_OUTPUT_TOKENS - llm.get_num_tokens(web_prompt_template)
+    texts = token_chunker(text, chunk_size)
+    docs = [langchaindoc(page_content=t) for t in texts]
+    print(chunk_size, len(text), len(docs))  
+    ret = web_chain({"input_documents": docs}, return_only_outputs=True)
+    print("ret", ret['output_text'])
+    return ret['output_text']
+
+def summerize_github_url(url):
+    try:
+        text = github_readme_text(url)
+    except Exception as e:
+        logger.exception(f"Error processing: {url}")
+        raise
+    logger.info(f"input length:   {len(text)}") 
+    chunk_size = 4097 - MAX_OUTPUT_TOKENS - llm.get_num_tokens(github_prompt_template)
+    texts = token_chunker(text, chunk_size)
+    docs = [langchaindoc(page_content=t) for t in texts]
+    print(chunk_size, len(text), len(docs))  
+    ret = github_chain({"input_documents": docs}, return_only_outputs=True)
+    print("ret", ret['output_text'])
+    return ret['output_text']
+
+
 def process_news():
     # get the top stories and process any new ones we haven't seen before
     with Session(engine) as session:    
@@ -191,36 +242,26 @@ def process_news():
                 logger.info(f"skipping hopeless {story.url}")
                 continue
             
-            # we have a url to process
-            try:
-                story_text, percentage_used = url_to_truncated_text_content(story.url, MAX_INPUT_TOKENS)
-            except Exception as e:
-                logger.exception(f"Error processing: {story}")
-                continue
-            logger.info(f"input length:   {len(story_text)}")
-            
-            prompt = compose_prompt(story, story_text, percentage_used < 100)
+            # we have a url to process          
+            site = urllib.parse.urlparse(story.url).netloc
+            if site == "github.com":
+                summary_text = summerize_github_url(story.url)
+            else:
+                summary_text = summerize_web_url(story.url)
 
-            for model in MODELS:
-                completion = openai.Completion.create(engine=model,
-                                                      prompt=prompt,
-                                                      temperature=MODEL_TEMPERATURE,
-                                                      max_tokens=MAX_OUTPUT_TOKENS)
-                summary_text = completion.choices[0].text
-                logger.info(f"output length:  {len(summary_text)}")
+            logger.info(f"output length:  {len(summary_text)}")
 
-                summary = StorySummary(story_id = story.id,
-                                       model    = model,
-                                       prompt   = prompt,
-                                       summary  = summary_text)            
-                session.add(summary)
-                session.commit()
+            ###XXX not sure how to get the final prompt text
+            summary = StorySummary(story_id = story.id,
+                                    model    = MODELS[0],
+                                    #prompt   = prompt,
+                                    summary  = summary_text)            
+            session.add(summary)
+            session.commit()
 
-                if model == "text-davinci-003":  # only send message for 003 model
-                    message = compose_message(story, summary_text, percentage_used)            
-                    telegram_bot.send_message(message)
-
-            
+            message = compose_message(story, summary_text, percentage_used)
+            print(message)            
+            telegram_bot.send_message(message)
 
 if __name__ == "__main__":
     logger.info("init")
