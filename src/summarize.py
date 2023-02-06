@@ -43,8 +43,16 @@ MODEL_TEMPERATURE=0.2
 MAX_INPUT_TOKENS=2800   # the maximum number of input tokens we will process 
 MAX_OUTPUT_TOKENS=700   # the maximum number of output tokens we will request
 
-llm = OpenAI(model=MODELS[0], temperature=MODEL_TEMPERATURE, max_tokens=MAX_OUTPUT_TOKENS)
+# Configure Logging
+logger = logging.getLogger()
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s %(filename)s %(lineno)4d %(levelname)s %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
+
+llm = OpenAI(model=MODELS[0], temperature=MODEL_TEMPERATURE, max_tokens=MAX_OUTPUT_TOKENS)
 
 # the prompt template for web content
 web_prompt_template = """
@@ -60,9 +68,11 @@ web_prompt = PromptTemplate(template=web_prompt_template,
                             input_variables=["text"])
  
 web_chain = load_summarize_chain(llm, 
-                                 chain_type="map_reduce", 
-                                 map_prompt=web_prompt,
-                                 combine_prompt=web_prompt,
+                                 chain_type="refine", 
+                                 question_prompt=web_prompt,
+                                 refine_prompt=web_prompt,
+                                 #map_prompt=web_prompt,
+                                 #combine_prompt=web_prompt,
                                  return_intermediate_steps=False) # set to True for debugging
 # prompt template for Github Readme files
 github_prompt_template = """
@@ -74,18 +84,48 @@ print(github_prompt_template)
 github_prompt = PromptTemplate(template=github_prompt_template, 
                                 input_variables=["text"])
 github_chain = load_summarize_chain(llm, 
-                                 chain_type="map_reduce", 
-                                 map_prompt=github_prompt,
-                                 combine_prompt=github_prompt,
+                                 chain_type="refine", 
+                                 question_prompt=web_prompt,
+                                 refine_prompt=web_prompt,
+                                 #map_prompt=github_prompt,
+                                 #combine_prompt=github_prompt,
                                  return_intermediate_steps=False) # set to True for debugging
 
-# Configure Logging
-logger = logging.getLogger()
-handler = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)s %(filename)s %(lineno)4d %(levelname)s %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+# doesn't respect sentence boundaries
+def token_chunker(text, chunk_size):
+    text_splitter = TokenTextSplitter(chunk_size=chunk_size, chunk_overlap=0)
+    texts = text_splitter.split_text(text)
+    return texts
+
+def summarize_web_url(url):
+    try:
+        text = get_url_text(url)
+    except Exception as e:
+        logger.exception(f"Error processing: {url}")
+        raise
+    logger.info(f"input length:   {len(text)}") 
+    chunk_size = 4097 - MAX_OUTPUT_TOKENS - llm.get_num_tokens(web_prompt_template)
+    texts = token_chunker(text, chunk_size)
+    docs = [langchaindoc(page_content=t) for t in texts]
+    print(chunk_size, len(text), len(docs))  
+    ret = web_chain({"input_documents": docs}, return_only_outputs=True)
+    print("ret", ret['output_text'])
+    return ret['output_text'], text
+
+def summarize_github_url(url):
+    try:
+        text = github_readme_text(url)
+    except Exception as e:
+        logger.exception(f"Error processing: {url}")
+        raise
+    logger.info(f"input length:   {len(text)}") 
+    chunk_size = 4097 - MAX_OUTPUT_TOKENS - llm.get_num_tokens(github_prompt_template)
+    texts = token_chunker(text, chunk_size)
+    docs = [langchaindoc(page_content=t) for t in texts]
+    print(chunk_size, len(text), len(docs))  
+    ret = github_chain({"input_documents": docs}, return_only_outputs=True)
+    print("ret", ret['output_text'])
+    return ret['output_text'], text
 
 
 # the tokenizer for helping to enforce the MAX_INPUT_TOKENS constraint
@@ -144,74 +184,8 @@ def get_url_text(url):
     return text
 
 
-def url_to_truncated_text_content(url, max_tokens):
-    """
-    return the text content associated with url, 
-    truncating the content using GPT tokenizer to max_tokens length.
-    raises exception if unable to get or adequately parse content
-    returns the text and int percentage (0-100) of the text that was was used
-    (e.g. percent=80 means that 20% of the content was discarded due to exceeding 
-    max_tokens)
-    """
-    if urllib.parse.urlparse(url).netloc == 'github.com':
-        # for github repos use api to attempt to find a readme file
-        text = github_readme_text(url)
-    else:
-        text = get_url_text(url)
-
-    # measure the text size in tokens
-    token_count = len(tokenizer(text)['input_ids'])
-    
-    if token_count > max_tokens:
-        # crudely truncate longer texts to get it back down to approximately the target MAX_INPUT_TOKENS
-        # TODO: enhance to truncate at sentence boundaries using actual token counts
-        split_point = int((float(MAX_INPUT_TOKENS)/token_count)*len(text))
-        percent = int(100*split_point/len(text))
-        text = text[:split_point]
-    else:
-        percent = 100        
-    return text, percent
-
-
 TOP_N_STORIES = 120   # only consider the top TOP_N_STORIES
 logger.info(f"TOP_N_STORIES: {TOP_N_STORIES}")
-
-# doesn't respect sentence boundaries
-def token_chunker(text, chunk_size):
-    text_splitter = TokenTextSplitter(chunk_size=chunk_size, chunk_overlap=0)
-    texts = text_splitter.split_text(text)
-    return texts
-
-def summerize_web_url(url):
-    try:
-        text = get_url_text(url)
-    except Exception as e:
-        logger.exception(f"Error processing: {url}")
-        raise
-    logger.info(f"input length:   {len(text)}") 
-    chunk_size = 4097 - MAX_OUTPUT_TOKENS - llm.get_num_tokens(web_prompt_template)
-    texts = token_chunker(text, chunk_size)
-    docs = [langchaindoc(page_content=t) for t in texts]
-    print(chunk_size, len(text), len(docs))  
-    ret = web_chain({"input_documents": docs}, return_only_outputs=True)
-    print("ret", ret['output_text'])
-    return ret['output_text']
-
-def summerize_github_url(url):
-    try:
-        text = github_readme_text(url)
-    except Exception as e:
-        logger.exception(f"Error processing: {url}")
-        raise
-    logger.info(f"input length:   {len(text)}") 
-    chunk_size = 4097 - MAX_OUTPUT_TOKENS - llm.get_num_tokens(github_prompt_template)
-    texts = token_chunker(text, chunk_size)
-    docs = [langchaindoc(page_content=t) for t in texts]
-    print(chunk_size, len(text), len(docs))  
-    ret = github_chain({"input_documents": docs}, return_only_outputs=True)
-    print("ret", ret['output_text'])
-    return ret['output_text']
-
 
 def process_news():
     # get the top stories and process any new ones we haven't seen before
@@ -245,21 +219,21 @@ def process_news():
             # we have a url to process          
             site = urllib.parse.urlparse(story.url).netloc
             if site == "github.com":
-                summary_text = summerize_github_url(story.url)
+                summary_text, original_text = summarize_github_url(story.url)
             else:
-                summary_text = summerize_web_url(story.url)
+                summary_text, original_text = summarize_web_url(story.url)
 
             logger.info(f"output length:  {len(summary_text)}")
 
             ###XXX not sure how to get the final prompt text
             summary = StorySummary(story_id = story.id,
                                     model    = MODELS[0],
-                                    #prompt   = prompt,
+                                    prompt   = original_text,
                                     summary  = summary_text)            
             session.add(summary)
             session.commit()
 
-            message = compose_message(story, summary_text, percentage_used)
+            message = compose_message(story, summary_text, 100)
             print(message)            
             telegram_bot.send_message(message)
 
