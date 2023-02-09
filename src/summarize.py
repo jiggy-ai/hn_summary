@@ -55,24 +55,44 @@ logger.setLevel(logging.INFO)
 llm = OpenAI(model=MODELS[0], temperature=MODEL_TEMPERATURE, max_tokens=MAX_OUTPUT_TOKENS)
 
 # the prompt template for web content
+REFINE_PROMPT_TMPL = (
+    "Provide a detailed summary of the following web content, including what type of content it is "
+    "(e.g. news article, essay, technical report, blog post, product documentation, content marketing, etc). "
+    "If the content looks like an error message, respond 'content unavailable'. " 
+    "If there is anything controversial please highlight the controversy. "
+    "If there is something surprising, unique, or clever, please highlight that as well: "
+    "We have provided an existing summary up to a certain point: {existing_answer}\n"
+    "You have the opportunity to refine the existing summary "
+    "(only if needed) with some more context below.\n"
+    "------------\n"
+    "{text}\n"
+    "------------\n"
+    "Given the new context, refine the original summary"
+    "If the context isn't useful, return the original summary."
+)
+web_refine_prompt = PromptTemplate(
+    input_variables=["existing_answer", "text"],
+    template=REFINE_PROMPT_TMPL,
+)
+
+
 web_prompt_template = """
 Provide a detailed summary of the following web content, including what type of content it is 
 (e.g. news article, essay, technical report, blog post, product documentation, content marketing, etc). 
 If the content looks like an error message, respond 'content unavailable'. 
 If there is anything controversial please highlight the controversy. 
 If there is something surprising, unique, or clever, please highlight that as well:
-{text}
+"{text}"
 """
-print(web_prompt_template)
+PROMPT = PromptTemplate(template=web_prompt_template, input_variables=["text"])
+
 web_prompt = PromptTemplate(template=web_prompt_template, 
                             input_variables=["text"])
  
 web_chain = load_summarize_chain(llm, 
-                                 chain_type="refine", 
+                                 chain_type="refine",
                                  question_prompt=web_prompt,
-                                 refine_prompt=web_prompt,
-                                 #map_prompt=web_prompt,
-                                 #combine_prompt=web_prompt,
+                                 refine_prompt=web_refine_prompt,
                                  return_intermediate_steps=False) # set to True for debugging
 # prompt template for Github Readme files
 github_prompt_template = """
@@ -87,8 +107,6 @@ github_chain = load_summarize_chain(llm,
                                  chain_type="refine", 
                                  question_prompt=web_prompt,
                                  refine_prompt=web_prompt,
-                                 #map_prompt=github_prompt,
-                                 #combine_prompt=github_prompt,
                                  return_intermediate_steps=False) # set to True for debugging
 
 # doesn't respect sentence boundaries
@@ -238,8 +256,9 @@ def process_news():
             telegram_bot.send_message(message)
 
 if __name__ == "__main__":
+    
     logger.info("init")
-    while True:
+    while False:  #True:
         try:
             process_news()
         except Exception as e:
