@@ -1,15 +1,15 @@
-pydantic==1.10.2
+pydantic==1.10.5
 sqlmodel==0.0.8
 psycopg2-binary==2.9.5
-requests==2.28.1
-python-telegram-bot==20.a2
-BeautifulSoup4==4.11.1
-openai==0.25.0
+requests==2.28.2
+python-telegram-bot==20.1
+BeautifulSoup4==4.11.2
+openai==0.27.0
 readability-lxml==0.8.1
-transformers==4.24.0
+transformers==4.26.1
 markdown==3.4.1
 pdfminer.six==20221105
-fastapi
-uvicorn[standard]
-gunicorn
+fastapi==0.92.0
+uvicorn[standard]==0.20.0
+gunicorn==20.1.0
 

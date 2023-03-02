@@ -26,8 +26,8 @@ from db import engine
 import dup_filter
 
 # the model we use for summarization
-#MODELS = ["text-davinci-003", "text-davinci-002"]
-MODELS = ["text-davinci-003"]
+COMPLETION_MODELS = ["text-davinci-003"]
+CHAT_MODELS = ["gpt-3.5-turbo"]
 
 # The temperature passed to the language model; higher values closer to 1 allow the model to choose
 # less probable words.  a value of 0 is results in deterministic but potentially less creative results.
@@ -65,7 +65,10 @@ tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 
 def compose_prompt(story, story_text, truncated=False):
     # compose the prompt that will be fed to the language model
-    site = urllib.parse.urlparse(story.url).netloc
+    if story.url:
+        site = urllib.parse.urlparse(story.url).netloc
+    else:
+        site = "news.ycombinator.com"
     if site == "github.com":
         prompt = GITHUB_PROMPT_PREFIX
     else:
@@ -182,18 +185,23 @@ def process_news():
                 continue
                 
             if not story.url:
-                logger.info(f"{story.title} has no url to summarize")
-                continue
-
-            HOPELESS = ["youtube.com",
-                        "www.youtube.com"]
-            if urllib.parse.urlparse(story.url).netloc in HOPELESS:
-                logger.info(f"skipping hopeless {story.url}")
-                continue
+                if not story.text:
+                    logger.info(f"{story.title} has no url or text to summarize")
+                    continue
+            else:
+                HOPELESS = ["youtube.com",
+                            "www.youtube.com"]
+                if urllib.parse.urlparse(story.url).netloc in HOPELESS:
+                    logger.info(f"skipping hopeless {story.url}")
+                    continue
             
             # we have a url to process
             try:
-                story_text, percentage_used = url_to_truncated_text_content(story.url, MAX_INPUT_TOKENS)
+                if story.url:
+                    story_text, percentage_used = url_to_truncated_text_content(story.url, MAX_INPUT_TOKENS)
+                else:
+                    story_text = story.text
+                    percentage_used = 100
             except Exception as e:
                 logger.exception(f"Error processing: {story}")
                 continue
@@ -201,7 +209,7 @@ def process_news():
             
             prompt = compose_prompt(story, story_text, percentage_used < 100)
 
-            for model in MODELS:
+            for model in COMPLETION_MODELS:
                 completion = openai.Completion.create(engine=model,
                                                       prompt=prompt,
                                                       temperature=MODEL_TEMPERATURE,
@@ -219,6 +227,22 @@ def process_news():
                 if model == "text-davinci-003":  # only send message for 003 model
                     message = compose_message(story, summary_text, percentage_used)            
                     telegram_bot.send_message(message)
+
+            for model in CHAT_MODELS:
+                completion = openai.ChatCompletion.create(model=model,
+                                                          messages=[{'role':'user','content': prompt}],
+                                                          temperature=MODEL_TEMPERATURE)
+                summary_text = completion['choices'][0]['message']['content']
+
+                logger.info(f"output length:  {len(summary_text)}")
+
+                summary = StorySummary(story_id = story.id,
+                                       model    = model,
+                                       prompt   = prompt,
+                                       summary  = summary_text)            
+                session.add(summary)
+                session.commit()
+
 
             
 
