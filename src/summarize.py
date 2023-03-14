@@ -39,10 +39,8 @@ MAX_OUTPUT_TOKENS=700   # the maximum number of output tokens we will request
 
 
 # the PROMPT_PREFIX is prepended to the url content before sending to the language model
-PROMPT_PREFIX  = "Provide a summary of the following web content, written in the voice of the original author. "
-PROMPT_PREFIX += "If the content looks like an error message or an issue retrieving the content respond 'content unavailable'."
-PROMPT_PREFIX += "If there is anything controversial please highlight the controversy. If there is something surprising, unique, or clever, please highlight that as well:\n"
-
+PROMPT_PREFIX  = "Provide a summary of the following web Content, written in the voice of the original author. "
+PROMPT_PREFIX += "If there is anything controversial please highlight the controversy. If there is something surprising, unique, or clever, please highlight that as well. Content:\n"
 
 # prompt prefix for Github Readme files
 GITHUB_PROMPT_PREFIX = "Provide a summary of the following github project readme file, including the purpose of the project, what problems it may be used to solve, and anything the author mentions that differentiates this project from others:"
@@ -57,6 +55,8 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
+
+logger.info(f"PROMPT_PREFIX: {PROMPT_PREFIX}")
 
 
 
@@ -110,12 +110,16 @@ def extract_text_from_html(content):
     return output
 
 
+user_agent = "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
+
+headers = {'User-Agent': user_agent}
+
 def get_url_text(url):
     """
     get url content and extract readable text
     returns the text
     """
-    resp = requests.get(url, timeout=30)
+    resp = requests.get(url, headers=headers, timeout=30)
 
     if resp.status_code != 200:
         raise Exception(f"Unable to get URL ({resp.status_code})")
