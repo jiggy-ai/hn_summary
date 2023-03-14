@@ -39,7 +39,10 @@ MAX_OUTPUT_TOKENS=700   # the maximum number of output tokens we will request
 
 
 # the PROMPT_PREFIX is prepended to the url content before sending to the language model
-PROMPT_PREFIX = "Provide a detailed summary of the following web content, including what type of content it is (e.g. news article, essay, technical report, blog post, product documentation, content marketing, etc). If the content looks like an error message, respond 'content unavailable'. If there is anything controversial please highlight the controversy. If there is something surprising, unique, or clever, please highlight that as well:\n"
+PROMPT_PREFIX  = "Provide a summary of the following web content, written in the voice of the original author. "
+PROMPT_PREFIX += "If the content looks like an error message or an issue retrieving the content respond 'content unavailable'."
+PROMPT_PREFIX += "If there is anything controversial please highlight the controversy. If there is something surprising, unique, or clever, please highlight that as well:\n"
+
 
 # prompt prefix for Github Readme files
 GITHUB_PROMPT_PREFIX = "Provide a summary of the following github project readme file, including the purpose of the project, what problems it may be used to solve, and anything the author mentions that differentiates this project from others:"
@@ -224,10 +227,6 @@ def process_news():
                 session.add(summary)
                 session.commit()
 
-                if model == "text-davinci-003":  # only send message for 003 model
-                    message = compose_message(story, summary_text, percentage_used)            
-                    telegram_bot.send_message(message)
-
             for model in CHAT_MODELS:
                 completion = openai.ChatCompletion.create(model=model,
                                                           messages=[{'role':'user','content': prompt}],
@@ -242,7 +241,10 @@ def process_news():
                                        summary  = summary_text)            
                 session.add(summary)
                 session.commit()
-
+                
+                if model == "gpt-3.5-turbo":  # only send message for this model
+                    message = compose_message(story, summary_text, percentage_used)            
+                    telegram_bot.send_message(message)
 
             
 
