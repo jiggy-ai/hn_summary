@@ -39,11 +39,11 @@ MAX_OUTPUT_TOKENS=700   # the maximum number of output tokens we will request
 
 
 # the PROMPT_PREFIX is prepended to the url content before sending to the language model
-PROMPT_PREFIX  = "Provide a summary of the following web Content, written in the voice of the original author. "
+PROMPT_PREFIX  = "Please provide a short (approximately 100 word) summary of the following web Content, written in the voice of the original author. "
 PROMPT_PREFIX += "If there is anything controversial please highlight the controversy. If there is something surprising, unique, or clever, please highlight that as well. Content:\n"
 
 # prompt prefix for Github Readme files
-GITHUB_PROMPT_PREFIX = "Provide a summary of the following github project readme file, including the purpose of the project, what problems it may be used to solve, and anything the author mentions that differentiates this project from others:"
+GITHUB_PROMPT_PREFIX = "Please provide a short (approximately 100 word) summary of the following github project readme file, including the purpose of the project, what problems it may be used to solve, and anything the author mentions that differentiates this project from others:"
 
 
 
