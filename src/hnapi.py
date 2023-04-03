@@ -3,6 +3,7 @@
 #
 # https://github.com/HackerNews/API
 
+
 import requests
 from requests.packages.urllib3 import Retry
 from requests.adapters import HTTPAdapter
@@ -41,6 +42,11 @@ def get_topstories():
     """
     return session.get("/topstories.json").json()
 
+def get_showstories():
+    """
+    return list of the integer ids of the current top show stories
+    """
+    return session.get("/showstories.json").json()
 
 def get_item(item_id):
     """
