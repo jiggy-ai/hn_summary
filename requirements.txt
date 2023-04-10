@@ -12,4 +12,4 @@ pdfminer.six==20221105
 fastapi==0.92.0
 uvicorn[standard]==0.20.0
 gunicorn==20.1.0
-
+loguru

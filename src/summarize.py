@@ -24,10 +24,12 @@ import telegram_bot
 from pdf_text import pdf_text
 from db import engine
 import dup_filter
+from gpt_gateway import upsert
+
 
 # the model we use for summarization
-COMPLETION_MODELS = ["text-davinci-003"]
-CHAT_MODELS = ["gpt-3.5-turbo"]
+COMPLETION_MODELS = []
+CHAT_MODELS = ["gpt-3.5-turbo", 'gpt-4']
 
 # The temperature passed to the language model; higher values closer to 1 allow the model to choose
 # less probable words.  a value of 0 is results in deterministic but potentially less creative results.
@@ -170,12 +172,18 @@ def url_to_truncated_text_content(url, max_tokens):
 
 
 TOP_N_STORIES = 120   # only consider the top TOP_N_STORIES
+TOP_N_SHOW    =  60   # and the TOP_N_SHOW HN
+
 logger.info(f"TOP_N_STORIES: {TOP_N_STORIES}")
 
 def process_news():
     # get the top stories and process any new ones we haven't seen before
-    with Session(engine) as session:    
-        for story_id in hnapi.get_topstories()[:TOP_N_STORIES]:
+    with Session(engine) as session:
+
+        top_stories = hnapi.get_topstories()[:TOP_N_STORIES]
+        show_stories = hnapi.get_showstories()[:TOP_N_SHOW]
+        all_stories = top_stories + show_stories
+        for story_id in all_stories:
             story = session.get(HackerNewsStory, story_id)
             if story:
                 continue
@@ -230,6 +238,7 @@ def process_news():
                                        summary  = summary_text)            
                 session.add(summary)
                 session.commit()
+                upsert(summary, story)
 
             for model in CHAT_MODELS:
                 completion = openai.ChatCompletion.create(model=model,
@@ -246,10 +255,10 @@ def process_news():
                 session.add(summary)
                 session.commit()
                 
-                if model == "gpt-3.5-turbo":  # only send message for this model
-                    message = compose_message(story, summary_text, percentage_used)            
-                    telegram_bot.send_message(message)
-
+                if model == "gpt-4":  # only send message for this model
+                    message = compose_message(story, summary_text, percentage_used)
+                    telegram_bot.send_message(message)                
+                upsert(summary, story)
             
 
 if __name__ == "__main__":
