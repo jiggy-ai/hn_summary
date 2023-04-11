@@ -29,7 +29,7 @@ from gpt_gateway import upsert
 
 # the model we use for summarization
 COMPLETION_MODELS = []
-CHAT_MODELS = ["gpt-3.5-turbo", 'gpt-4']
+CHAT_MODELS = ["gpt-3.5-turbo"]
 
 # The temperature passed to the language model; higher values closer to 1 allow the model to choose
 # less probable words.  a value of 0 is results in deterministic but potentially less creative results.
