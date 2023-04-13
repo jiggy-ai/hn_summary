@@ -16,7 +16,7 @@ Feel free to open PR/issue or dm me at @wskish on telegram or twitter with feedb
 
 ## Overview
 
-Whenever a new story appears on the Hacker News API /topstories.json endpoint, this bot summarizes it (currently using OpenAI GPT-3 text-davinci-003) and sends the Story title, summary, and url to the hn_summary channel on Telegram.
+Whenever a new story appears on the Hacker News API /topstories.json endpoint, this bot summarizes it (currently using OpenAI gpt-3.5-turbo) and sends the Story title, summary, and url to the hn_summary channel on Telegram.
 
 The purpose of this project is to help build intuition on the capabilities of the current generation of large language models while surfacing a broader swath of top Hacker News content.  It could also serve as a platform for experimentation with other language model capabilities such as semantic search.
 
