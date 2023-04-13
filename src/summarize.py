@@ -255,7 +255,7 @@ def process_news():
                 session.add(summary)
                 session.commit()
                 
-                if model == "gpt-4":  # only send message for this model
+                if model == "gpt-3.5-turbo":  # only send message for this model
                     message = compose_message(story, summary_text, percentage_used)
                     telegram_bot.send_message(message)                
                 upsert(summary, story)
