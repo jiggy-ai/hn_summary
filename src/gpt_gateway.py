@@ -60,7 +60,7 @@ class QueryRequest(BaseModel):
 GPTG_API_KEY = os.environ['GPTG_API_KEY']
 
 
-hnsummary_collection = PrefixSession('https://hackernews-summary.gpt-gateway.com')
+hnsummary_collection = PrefixSession('https://hackernews-summary.plugin.jiggy.ai')
 
 
 def upsert(ss : StorySummary, hns : HackerNewsStory):
