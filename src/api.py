@@ -1,4 +1,4 @@
-# HTTP API to hn_summary
+# serves news.jiggy.ai
 
 from __future__ import annotations
 
@@ -66,9 +66,21 @@ import threading
 
 HTML_RESPONSE = ""
 
+ANALYTICS = """<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WQ986DBSZV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-WQ986DBSZV');
+</script>"""
+
 def update_html():
     logger.info("update")
-    result = "<html>Join <a href=https://t.me/hn_summary>HN Summary</a> channel on Telegram to view realtime summaries of top HN Stories<br>"
+    result = f"<html>{ANALYTICS}"
+    result += "Sponsored by <a href=https://jiggy.ai>JiggyBase</a>.  JiggyBase is ChatGPT powered by your data!<br><br>"
+    result += "Join <a href=https://t.me/hn_summary>HN Summary</a> channel on Telegram to view realtime summaries of top HN Stories.<br>"
     result += "Results are from open source <a href=https://github.com/jiggy-ai/hn_summary>HN Summary</a> bot.<BR><br>"
     
     count = 0
