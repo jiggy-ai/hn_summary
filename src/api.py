@@ -25,7 +25,7 @@ import hnapi
 from dbmodels import *
 
 
-
+start_time = time()
 
 # Configure Logging
 logger = logging.getLogger()
@@ -78,8 +78,8 @@ ANALYTICS = """<!-- Global site tag (gtag.js) - Google Analytics -->
 
 def update_html():
     logger.info("update")
-    result = f"<html>{ANALYTICS}"
-    result += "Sponsored by <a href=https://jiggy.ai>JiggyBase</a>.  JiggyBase is ChatGPT powered by your data!<br><br>"
+    result = f"<html>{ANALYTICS}<head><title>news.jiggy.ai</title></head><body>"
+    result += "<B><a href=https://jiggy.ai>JiggyBase</a></b> (sponsored)<BR>JiggyBase is your data powered by ChatGPT!<br><br>"
     result += "Join <a href=https://t.me/hn_summary>HN Summary</a> channel on Telegram to view realtime summaries of top HN Stories.<br>"
     result += "Results are from open source <a href=https://github.com/jiggy-ai/hn_summary>HN Summary</a> bot.<BR><br>"
     
@@ -110,7 +110,7 @@ def update_html():
                     result += element + "<br>"
                 result += "<br>"
             result += "<br>"                
-    result += "</html>"
+    result += "</body></html>"
     global HTML_RESPONSE
     HTML_RESPONSE = result
     logger.info(f"update {time()-t0} seconds")
@@ -123,6 +123,8 @@ def background():
         except exception as e:
             logger.exception(e)
         sleep(120)
+        if (time() - start_time) > 24*60*60:
+            os._exit(1)
 
 threading.Thread(target=background).start()
 
