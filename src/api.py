@@ -79,10 +79,12 @@ ANALYTICS = """<!-- Global site tag (gtag.js) - Google Analytics -->
 def update_html():
     logger.info("update")
     result = f"<html>{ANALYTICS}<head><title>news.jiggy.ai</title></head><body>"
-    result += "<B><a href=https://jiggy.ai>JiggyBase</a></b> (sponsored)<BR>JiggyBase is your data powered by ChatGPT!<br><br>"
-    result += "Join <a href=https://t.me/hn_summary>HN Summary</a> channel on Telegram to view realtime summaries of top HN Stories.<br>"
-    result += "Results are from open source <a href=https://github.com/jiggy-ai/hn_summary>HN Summary</a> bot.<BR><br>"
-    
+#    result += "<B><a href=https://jiggy.ai>JiggyBase</a></b> <BR>JiggyBase is your data powered by ChatGPT!<br><br>"
+    result += "Join <a href=https://t.me/hn_summary>HN Summary</a> channel on Telegram to view realtime summaries of top HN Stories "
+    result += "from open source <a href=https://github.com/jiggy-ai/hn_summary>HN Summary</a> bot.<BR><br>"
+    global HTML_RESPONSE
+    HTML_RESPONSE = result
+    return
     count = 0
     t0 = time()
     
@@ -111,7 +113,6 @@ def update_html():
                 result += "<br>"
             result += "<br>"                
     result += "</body></html>"
-    global HTML_RESPONSE
     HTML_RESPONSE = result
     logger.info(f"update {time()-t0} seconds")
     
@@ -133,7 +134,7 @@ threading.Thread(target=background).start()
 def get_root():
     return HTML_RESPONSE
 
-
+"""
 @app.get('/prompt/{story_id}', response_class=HTMLResponse)
 def get_prompt(story_id: str = Path(...)):
     with Session(engine) as session:
@@ -141,3 +142,4 @@ def get_prompt(story_id: str = Path(...)):
         if not summary:
             return "None"
         return summary.prompt
+"""

@@ -29,14 +29,14 @@ from gpt_gateway import upsert
 
 # the model we use for summarization
 COMPLETION_MODELS = []
-CHAT_MODELS = ["gpt-3.5-turbo"]
+CHAT_MODELS = ["gpt-4o"]
 
 # The temperature passed to the language model; higher values closer to 1 allow the model to choose
 # less probable words.  a value of 0 is results in deterministic but potentially less creative results.
 MODEL_TEMPERATURE=0.2
 
 
-MAX_INPUT_TOKENS=2800   # the maximum number of input tokens we will process 
+MAX_INPUT_TOKENS=3200   # the maximum number of input tokens we will process 
 MAX_OUTPUT_TOKENS=700   # the maximum number of output tokens we will request
 
 
@@ -176,6 +176,8 @@ TOP_N_SHOW    =  60   # and the TOP_N_SHOW HN
 
 logger.info(f"TOP_N_STORIES: {TOP_N_STORIES}")
 
+PUBLISH_MODEL = "gpt-4o"   # the model output to send to telegram
+
 def process_news():
     # get the top stories and process any new ones we haven't seen before
     with Session(engine) as session:
@@ -224,22 +226,6 @@ def process_news():
             
             prompt = compose_prompt(story, story_text, percentage_used < 100)
 
-            for model in COMPLETION_MODELS:
-                completion = openai.Completion.create(engine=model,
-                                                      prompt=prompt,
-                                                      temperature=MODEL_TEMPERATURE,
-                                                      max_tokens=MAX_OUTPUT_TOKENS)
-                summary_text = completion.choices[0].text
-                logger.info(f"output length:  {len(summary_text)}")
-
-                summary = StorySummary(story_id = story.id,
-                                       model    = model,
-                                       prompt   = prompt,
-                                       summary  = summary_text)            
-                session.add(summary)
-                session.commit()
-                upsert(summary, story)
-
             for model in CHAT_MODELS:
                 completion = openai.ChatCompletion.create(model=model,
                                                           messages=[{'role':'user','content': prompt}],
@@ -255,10 +241,10 @@ def process_news():
                 session.add(summary)
                 session.commit()
                 
-                if model == "gpt-3.5-turbo":  # only send message for this model
+                if model == PUBLISH_MODEL:  # only send message for this model
                     message = compose_message(story, summary_text, percentage_used)
                     telegram_bot.send_message(message)                
-                upsert(summary, story)
+                #upsert(summary, story)
             
 
 if __name__ == "__main__":
